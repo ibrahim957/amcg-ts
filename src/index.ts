@@ -1,23 +1,27 @@
+import express, { Express, Request, Response } from 'express';
 import * as dotenv from 'dotenv';
-dotenv.config();
 
 // get all imports
-import * as deepai from 'deepai';
+import deepai from 'deepai';
 import * as openai from 'openai';
 
 // Config constants
 let openaiApi: openai.OpenAIApi;
 let openAiConfig: openai.Configuration;
 
-import {addTextOnImage, downloadFile} from './utils';
-import {AxiosResponse} from 'axios';
+import { addTextOnImage, downloadFile } from './utils';
+import { AxiosResponse } from 'axios';
 import sharp = require('sharp');
+
+dotenv.config();
+
+const app: Express = express();
+const port = process.env.PORT;
 
 /**
  * Image URL for testing image processing flows, as not to run up API usage cost
  */
-const TEST_IMAGE_URL =
-  'https://api.deepai.org/job-view-file/6a9cfedc-d418-44e7-97e1-e265ead8b913/outputs/output.jpg';
+const TEST_IMAGE_URL = 'https://api.deepai.org/job-view-file/6a9cfedc-d418-44e7-97e1-e265ead8b913/outputs/output.jpg';
 
 /**
  *
@@ -73,6 +77,10 @@ async function generateMemes(prompt: string) {
   }
 }
 
-generateMemes('imran khan is happy').finally(() => {
-  console.log('Exited.');
+app.get('/', (req: Request, res: Response) => {
+  res.send(generateMemes('Imran khan is happy'))
+});
+
+app.listen(port, () => {
+  console.log(`[server]: Server is running at https://localhost:${port}`);
 });
