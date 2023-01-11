@@ -24,7 +24,7 @@ const authToken = (req: CustomRequest, res: Response, next: NextFunction) => {
 
   }
 
-  jwt.verify(token, process.env.tokenSecret, (err: any, user: any) => {
+  jwt.verify(token, process.env.TOKEN_SECRET, (err: any, user: any) => {
 
     if (err) {
 
@@ -40,4 +40,4 @@ const authToken = (req: CustomRequest, res: Response, next: NextFunction) => {
   })
 }
 
-module.exports = authToken
+export default authToken

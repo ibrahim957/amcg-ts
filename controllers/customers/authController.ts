@@ -1,18 +1,21 @@
-import {NextFunction, Response} from "express";
-import {CustomRequest} from "../../middleware/authToken";
+import {Request,NextFunction, Response} from "express";
 import * as dotenv from 'dotenv';
+import customers from "../../models/customerModel";
+
 dotenv.config();
 
-const jwt = require('jsonwebtoken')
-const bcrypt = require('bcryptjs')
+import jwt,{Secret} from 'jsonwebtoken'
+import bcrypt from 'bcryptjs'
+import {CustomRequest} from "../../middleware/authToken";
 
 // const func = require('../../../helpers/functions')
 const config = process.env
-const Customers = require('../../models/customerModel')
 
-const register = async(req: CustomRequest, res: Response, next: NextFunction) => {
+const register = async(req: Request, res: Response, next: NextFunction) => {
 
   try {
+
+    console.log('1')
 
     const { email_address, password } = req.body
 
@@ -24,9 +27,9 @@ const register = async(req: CustomRequest, res: Response, next: NextFunction) =>
 
     // if(!await func.validatePassword(password)) return next('Password is not valid')
 
-    const Customer = await Customers.findOne({ email_address })
+    const customer:any = await customers.findOne({ email_address })
 
-    if(!Customer) {
+    if(!customer) {
 
       const encrypted = await bcrypt.hash(password, 10);
 
@@ -35,9 +38,9 @@ const register = async(req: CustomRequest, res: Response, next: NextFunction) =>
         password: encrypted,
       }
 
-      await Customers.create(data).then((response: object) => {
+      await customers.create(data).then((response: object) => {
 
-        const token = jwt.sign(email_address, config.tokenSecret)
+        const token = jwt.sign(email_address, process.env.TOKEN_SECRET || "123456")
 
         return res.status(200).send({
           status: 200,
@@ -61,7 +64,7 @@ const register = async(req: CustomRequest, res: Response, next: NextFunction) =>
 
 }
 
-const login = async(req: CustomRequest, res: Response, next: NextFunction) => {
+const login = async(req: Request, res: Response, next: NextFunction) => {
 
   try {
 
@@ -75,19 +78,19 @@ const login = async(req: CustomRequest, res: Response, next: NextFunction) => {
 
     // if(!await func.validateEmail(email_address)) return next('Email Address is not valid')
 
-    const Customer = await Customers.findOne({ email_address })
+    const customer:any = await customers.findOne({ email_address })
 
-    if(Customer) {
+    if(customer) {
 
-      if(await bcrypt.compare(password, Customer.password)) {
+      if(await bcrypt.compare(password, customer.password)) {
 
-        const token = jwt.sign(email_address, config.tokenSecret)
+        const token = jwt.sign(email_address, config.TOKEN_SECRET || "123456")
 
         return res.status(200).send({
           status: 200,
           error: false,
           message: 'Customer logged in successfully',
-          Customer: Customer,
+          Customer: customer,
           token: token
         })
 
@@ -107,5 +110,5 @@ const login = async(req: CustomRequest, res: Response, next: NextFunction) => {
 
 module.exports = {
   register,
-  login,
+  login
 }

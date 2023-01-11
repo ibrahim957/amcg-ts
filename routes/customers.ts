@@ -1,22 +1,35 @@
 import {Router} from "express";
 
-const apiKey = require('../middleware/apiKey')
-const authToken = require('../middleware/authToken')
+import apiKey from '../middleware/apiKey'
+import authToken from'../middleware/authToken'
 const authController = require('../controllers/customers/authController')
+const profileController = require('../controllers/customers/profileController')
 
-const router = Router()
+const customerRouter = Router()
 
-router.use('/', apiKey, (router: Router) => {
+// CustomerRouter.get('/',authController.test)
+// CustomerRouter.get('/a', (request, response) => {
+//   console.log('11')
+//   return response.json("OK");
+// });
 
-  router.post('/register', authController.register)
-  router.post('/login', authController.login)
 
-  router.use('/', authToken, (router: Router) => {
+// CustomerRouter.use('/', apiKey, (router: Router) => {
+//
+//   router.post('/register', authController.register)
+//   router.post('/login', authController.login)
+//
+//   router.use('/', authToken, (router: Router) => {
+//
+//     // router.post('/log-out', authController.logOut)
+//
+//   })
+//
+// })
+customerRouter.use(apiKey)
+customerRouter.post('/register',authController.register)
+customerRouter.post('/login',authController.login)
+customerRouter.use(authToken)
+customerRouter.post('/policy',profileController.policy)
 
-    // router.post('/log-out', authController.logOut)
-
-  })
-
-})
-
-export = router
+export default customerRouter

@@ -31,16 +31,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv = __importStar(require("dotenv"));
+const customerModel_1 = __importDefault(require("../../models/customerModel"));
 dotenv.config();
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 // const func = require('../../../helpers/functions')
 const config = process.env;
-const Customers = require('../../models/customerModel');
 const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        console.log('1');
         const { email_address, password } = req.body;
         if (!email_address)
             return next('Email address is required');
@@ -48,15 +52,15 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         if (!password)
             return next('Password is required');
         // if(!await func.validatePassword(password)) return next('Password is not valid')
-        const Customer = yield Customers.findOne({ email_address });
-        if (!Customer) {
-            const encrypted = yield bcrypt.hash(password, 10);
+        const customer = yield customerModel_1.default.findOne({ email_address });
+        if (!customer) {
+            const encrypted = yield bcryptjs_1.default.hash(password, 10);
             const data = {
                 email_address,
                 password: encrypted,
             };
-            yield Customers.create(data).then((response) => {
-                const token = jwt.sign(email_address, config.tokenSecret);
+            yield customerModel_1.default.create(data).then((response) => {
+                const token = jsonwebtoken_1.default.sign(email_address, process.env.TOKEN_SECRET || "123456");
                 return res.status(200).send({
                     status: 200,
                     error: false,
@@ -85,15 +89,15 @@ const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* ()
         if (!email_address)
             return next('Email address is required');
         // if(!await func.validateEmail(email_address)) return next('Email Address is not valid')
-        const Customer = yield Customers.findOne({ email_address });
-        if (Customer) {
-            if (yield bcrypt.compare(password, Customer.password)) {
-                const token = jwt.sign(email_address, config.tokenSecret);
+        const customer = yield customerModel_1.default.findOne({ email_address });
+        if (customer) {
+            if (yield bcryptjs_1.default.compare(password, customer.password)) {
+                const token = jsonwebtoken_1.default.sign(email_address, config.TOKEN_SECRET || "123456");
                 return res.status(200).send({
                     status: 200,
                     error: false,
                     message: 'Customer logged in successfully',
-                    Customer: Customer,
+                    Customer: customer,
                     token: token
                 });
             }
@@ -111,5 +115,5 @@ const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* ()
 });
 module.exports = {
     register,
-    login,
+    login
 };

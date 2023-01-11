@@ -27,26 +27,30 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const cors = require('cors');
-const morgan = require('morgan');
-const helmet = require('helmet');
-const xss = require('xss-clean');
-const { createServer } = require("http");
-const { Server } = require("socket.io");
-const mongoose = require('mongoose');
+const cors_1 = __importDefault(require("cors"));
+const morgan_1 = __importDefault(require("morgan"));
+const helmet_1 = __importDefault(require("helmet"));
 const bodyParser = __importStar(require("body-parser"));
 const dotenv = __importStar(require("dotenv"));
+const mongoose_1 = __importDefault(require("mongoose"));
+const errorHandler_1 = __importDefault(require("./middleware/errorHandler"));
+const customers_1 = __importDefault(require("./routes/customers"));
 dotenv.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT;
-app.use(cors());
+mongoose_1.default.connect(`${process.env.MONGO_URI}`).then(() => {
+    console.log(`Database connected @ ${process.pid}`);
+}).catch((error) => {
+    console.log(error);
+});
+app.use((0, cors_1.default)());
 app.use(express_1.default.json({ limit: '50mb' }));
 app.use(express_1.default.urlencoded({ limit: '50mb', extended: true }));
 app.use(bodyParser.json());
-app.use(morgan('combined'));
-app.use(helmet());
-app.use(xss());
-app.use('/api/customers', require('./routes/customers'));
+app.use((0, morgan_1.default)('combined'));
+app.use((0, helmet_1.default)());
+app.use('/customer', customers_1.default);
+app.use(errorHandler_1.default);
 app.listen(port, () => {
-    console.log(`[server]: Server is running at https://localhost:${port}`);
+    console.log(`[server]: Server is running at http://localhost:${port}`);
 });

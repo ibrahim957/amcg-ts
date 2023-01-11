@@ -36,7 +36,7 @@ const authToken = (req, res, next) => {
             message: 'Please provide an authentication token'
         });
     }
-    jwt.verify(token, process.env.tokenSecret, (err, user) => {
+    jwt.verify(token, process.env.TOKEN_SECRET, (err, user) => {
         if (err) {
             return res.status(401).send({
                 status: 401,
@@ -48,4 +48,4 @@ const authToken = (req, res, next) => {
         next();
     });
 };
-module.exports = authToken;
+exports.default = authToken;

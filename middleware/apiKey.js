@@ -34,7 +34,7 @@ const apiKey = function (req, res, next) {
             message: 'Please provide an api key'
         });
     }
-    else if (token !== process.env.apiKey) {
+    else if (token !== process.env.API_KEY) {
         return res.status(401).send({
             status: 401,
             error: true,
@@ -45,4 +45,4 @@ const apiKey = function (req, res, next) {
         next();
     }
 };
-module.exports = apiKey;
+exports.default = apiKey;
