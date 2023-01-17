@@ -29,6 +29,7 @@ const customerRouter = (0, express_1.Router)();
 customerRouter.use(apiKey_1.default);
 customerRouter.post('/register', authController.register);
 customerRouter.post('/login', authController.login);
+customerRouter.post('/reset-pass-auth', authController.passwordResetMail);
 customerRouter.use(authToken_1.default);
 customerRouter.post('/policy', profileController.policy);
 exports.default = customerRouter;

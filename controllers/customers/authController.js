@@ -40,6 +40,7 @@ const customerModel_1 = __importDefault(require("../../models/customerModel"));
 dotenv.config();
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const functions = __importStar(require("../../helpers/functions"));
 // const func = require('../../../helpers/functions')
 const config = process.env;
 const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -113,7 +114,85 @@ const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* ()
         return next(err);
     }
 });
+const passwordResetMail = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { email_address } = req.body;
+        let customer = yield customerModel_1.default.findOne({ email_address: email_address });
+        if (!customer) {
+            return next('Customer not found');
+        }
+        const query = { email_address: email_address };
+        const verification_code = (process.env.NODE_ENV === 'development') ? 1234 : Math.floor(1000 + Math.random() * 9000);
+        yield functions.sendEmail(email_address, 'Password Reset Code', `Your verification code for Password Reset is : ${verification_code},<br>If password reset was not initiated by you then please discard this mail.`);
+        let update = {
+            otp: verification_code
+        };
+        const option = { new: true };
+        yield customerModel_1.default.findOneAndUpdate(query, update, option).then(() => {
+            return res.status(200).send({
+                status: 200,
+                error: false,
+                message: 'Password reset mail sent',
+            });
+        }).catch((err) => {
+            return next(err);
+        });
+    }
+    catch (err) {
+        return next(err);
+    }
+});
+// const passwordReset = async (req :CustomRequest, res:Response, next:NextFunction) => {
+//
+//   try {
+//
+//     const email_address = req.user
+//
+//     console.log(email_address)
+//
+//     let customer:any = await customers.findOne({ email_address: email_address })
+//
+//     if(!customer) {
+//       return next('Customer not found')
+//     }
+//
+//     const {name, base64_image} = req.body
+//
+//     if(!name) {
+//       return next('Name is required')
+//     }
+//
+//     const query = { email_address: email_address }
+//
+//     let update = {
+//       name,
+//       photo:null
+//     }
+//
+//     // if(base64_image) {
+//     //   update.photo = await functions.uploadImage(base64_image)
+//     // }
+//
+//     const option = { new: true }
+//
+//     await customers.findOneAndUpdate(query, update, option).then(() => {
+//
+//       return res.status(200).send({
+//         status: 200,
+//         error: false,
+//         message: 'User policies accepted',
+//       })
+//
+//     }).catch((err: any) => {
+//       return next(err)
+//     })
+//
+//   } catch (err) {
+//     return next(err)
+//   }
+// }
 module.exports = {
     register,
-    login
+    login,
+    passwordResetMail,
 };

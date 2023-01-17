@@ -41,7 +41,6 @@ dotenv.config();
 const policy = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const email_address = req.user;
-        console.log(email_address);
         let customer = yield customerModel_1.default.findOne({ email_address: email_address });
         if (!customer) {
             return next('Rider not found');
@@ -65,6 +64,41 @@ const policy = (req, res, next) => __awaiter(void 0, void 0, void 0, function* (
         return next(err);
     }
 });
+const profile = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const email_address = req.user;
+        let customer = yield customerModel_1.default.findOne({ email_address: email_address });
+        if (!customer) {
+            return next('Customer not found');
+        }
+        const { name, base64_image } = req.body;
+        if (!name) {
+            return next('Name is required');
+        }
+        const query = { email_address: email_address };
+        let update = {
+            name,
+            photo: null
+        };
+        // if(base64_image) {
+        //   update.photo = await functions.uploadImage(base64_image)
+        // }
+        const option = { new: true };
+        yield customerModel_1.default.findOneAndUpdate(query, update, option).then(() => {
+            return res.status(200).send({
+                status: 200,
+                error: false,
+                message: 'User policies accepted',
+            });
+        }).catch((err) => {
+            return next(err);
+        });
+    }
+    catch (err) {
+        return next(err);
+    }
+});
 module.exports = {
-    policy
+    policy,
+    profile
 };

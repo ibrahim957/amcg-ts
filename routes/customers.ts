@@ -7,29 +7,15 @@ const profileController = require('../controllers/customers/profileController')
 
 const customerRouter = Router()
 
-// CustomerRouter.get('/',authController.test)
-// CustomerRouter.get('/a', (request, response) => {
-//   console.log('11')
-//   return response.json("OK");
-// });
 
-
-// CustomerRouter.use('/', apiKey, (router: Router) => {
-//
-//   router.post('/register', authController.register)
-//   router.post('/login', authController.login)
-//
-//   router.use('/', authToken, (router: Router) => {
-//
-//     // router.post('/log-out', authController.logOut)
-//
-//   })
-//
-// })
 customerRouter.use(apiKey)
 customerRouter.post('/register',authController.register)
 customerRouter.post('/login',authController.login)
+customerRouter.post('/reset-pass-auth',authController.passwordResetMail)
+customerRouter.post('/reset-pass',authController.passwordReset)
 customerRouter.use(authToken)
 customerRouter.post('/policy',profileController.policy)
+customerRouter.post('/verify-mail-code',profileController.verifyMailCode)
+customerRouter.post('/verify-mail',profileController.verifyMail)
 
 export default customerRouter
