@@ -37,6 +37,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv = __importStar(require("dotenv"));
 const customerModel_1 = __importDefault(require("../../models/customerModel"));
+const functions = __importStar(require("../../helpers/functions"));
 dotenv.config();
 const policy = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -98,7 +99,71 @@ const profile = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         return next(err);
     }
 });
+const verifyMailCode = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const email_address = req.user;
+        let customer = yield customerModel_1.default.findOne({ email_address: email_address });
+        if (!customer) {
+            return next('Customer not found');
+        }
+        const query = { email_address: email_address };
+        const verification_code = (process.env.NODE_ENV === 'development') ? 1234 : Math.floor(1000 + Math.random() * 9000);
+        yield functions.sendEmail(email_address, 'Verify Email', `Your verification code for Email Verification is : ${verification_code}, If this is not you then please discard this mail.`);
+        let update = {
+            otp: verification_code
+        };
+        const option = { new: true };
+        yield customerModel_1.default.findOneAndUpdate(query, update, option).then(() => {
+            return res.status(200).send({
+                status: 200,
+                error: false,
+                message: 'Email verification code sent',
+            });
+        }).catch((err) => {
+            return next(err);
+        });
+    }
+    catch (err) {
+        return next(err);
+    }
+});
+const verifyMail = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const email_address = req.user;
+        let customer = yield customerModel_1.default.findOne({ email_address: email_address });
+        if (!customer) {
+            return next('Customer not found');
+        }
+        const { otp } = req.body;
+        if (!otp) {
+            return next('Otp is required');
+        }
+        if (otp !== customer.otp) {
+            return next('Otp does not match');
+        }
+        const query = { email_address: email_address };
+        let update = {
+            otp: null,
+            'status.email_verified': true
+        };
+        const option = { new: true };
+        yield customerModel_1.default.findOneAndUpdate(query, update, option).then(() => __awaiter(void 0, void 0, void 0, function* () {
+            return res.status(200).send({
+                status: 200,
+                error: false,
+                message: 'Email Verified',
+            });
+        })).catch((err) => {
+            return next(err);
+        });
+    }
+    catch (err) {
+        return next(err);
+    }
+});
 module.exports = {
     policy,
-    profile
+    profile,
+    verifyMailCode,
+    verifyMail
 };
