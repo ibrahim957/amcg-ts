@@ -24,7 +24,7 @@ const register = async(req: Request, res: Response, next: NextFunction) => {
 
     // if(!await func.validatePassword(password)) return next('Password is not valid')
 
-    const customer:any = await customers.findOne({ email_address })
+    const customer:any = await customers.findOne({ email_address:email_address })
 
     if(!customer) {
 
@@ -75,9 +75,9 @@ const login = async(req: Request, res: Response, next: NextFunction) => {
 
     // if(!await func.validateEmail(email_address)) return next('Email Address is not valid')
 
-    const customer:any = await customers.findOne({ email_address })
+    const customer:any = await customers.findOne({ email_address:email_address })
 
-    if(customer) {
+    if(!customer) {
 
       if(await bcrypt.compare(password, customer.password)) {
 

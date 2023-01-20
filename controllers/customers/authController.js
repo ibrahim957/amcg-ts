@@ -51,7 +51,7 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         if (!password)
             return next('Password is required');
         // if(!await func.validatePassword(password)) return next('Password is not valid')
-        const customer = yield customerModel_1.default.findOne({ email_address });
+        const customer = yield customerModel_1.default.findOne({ email_address: email_address });
         if (!customer) {
             const encrypted = yield bcryptjs_1.default.hash(password, 10);
             const data = {
@@ -88,8 +88,8 @@ const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* ()
         if (!email_address)
             return next('Email address is required');
         // if(!await func.validateEmail(email_address)) return next('Email Address is not valid')
-        const customer = yield customerModel_1.default.findOne({ email_address });
-        if (customer) {
+        const customer = yield customerModel_1.default.findOne({ email_address: email_address });
+        if (!customer) {
             if (yield bcryptjs_1.default.compare(password, customer.password)) {
                 const token = jsonwebtoken_1.default.sign(email_address, config.TOKEN_SECRET || "123456");
                 return res.status(200).send({
