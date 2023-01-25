@@ -77,7 +77,7 @@ const login = async(req: Request, res: Response, next: NextFunction) => {
 
     const customer:any = await customers.findOne({ email_address:email_address })
 
-    if(!customer) {
+    if(customer) {
 
       if(await bcrypt.compare(password, customer.password)) {
 
