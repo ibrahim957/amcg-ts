@@ -14,7 +14,7 @@ const register = async(req: Request, res: Response, next: NextFunction) => {
 
   try {
 
-    const { email_address, password } = req.body
+    const { email_address, password, name } = req.body
 
     if(!email_address) return next('Email address is required')
 
@@ -23,6 +23,8 @@ const register = async(req: Request, res: Response, next: NextFunction) => {
     if(!password) return next('Password is required')
 
     // if(!await func.validatePassword(password)) return next('Password is not valid')
+
+    if(!name) return next('UserName is required')
 
     const customer:any = await customers.findOne({ email_address:email_address })
 
@@ -33,6 +35,7 @@ const register = async(req: Request, res: Response, next: NextFunction) => {
       const data = {
         email_address,
         password: encrypted,
+        name: name
       }
 
       await customers.create(data).then((response: object) => {
