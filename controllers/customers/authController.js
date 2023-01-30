@@ -44,19 +44,22 @@ const functions = __importStar(require("../../helpers/functions"));
 const config = process.env;
 const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { email_address, password } = req.body;
+        const { email_address, password, name } = req.body;
         if (!email_address)
             return next('Email address is required');
         // if(!await func.validateEmail(email_address)) return next('Email Address is not valid')
         if (!password)
             return next('Password is required');
         // if(!await func.validatePassword(password)) return next('Password is not valid')
+        if (!name)
+            return next('UserName is required');
         const customer = yield customerModel_1.default.findOne({ email_address: email_address });
         if (!customer) {
             const encrypted = yield bcryptjs_1.default.hash(password, 10);
             const data = {
                 email_address,
                 password: encrypted,
+                name: name
             };
             yield customerModel_1.default.create(data).then((response) => {
                 const token = jsonwebtoken_1.default.sign(email_address, process.env.TOKEN_SECRET || "123456");
@@ -89,7 +92,7 @@ const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* ()
             return next('Email address is required');
         // if(!await func.validateEmail(email_address)) return next('Email Address is not valid')
         const customer = yield customerModel_1.default.findOne({ email_address: email_address });
-        if (!customer) {
+        if (customer) {
             if (yield bcryptjs_1.default.compare(password, customer.password)) {
                 const token = jsonwebtoken_1.default.sign(email_address, config.TOKEN_SECRET || "123456");
                 return res.status(200).send({

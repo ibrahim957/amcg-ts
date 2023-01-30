@@ -4,9 +4,9 @@ import apiKey from '../middleware/apiKey'
 import authToken from'../middleware/authToken'
 const authController = require('../controllers/customers/authController')
 const profileController = require('../controllers/customers/profileController')
+const contentController = require('../controllers/customers/contentController')
 
 const customerRouter = Router()
-
 
 customerRouter.use(apiKey)
 customerRouter.post('/register',authController.register)
@@ -17,5 +17,6 @@ customerRouter.use(authToken)
 customerRouter.post('/policy',profileController.policy)
 customerRouter.post('/verify-mail-code',profileController.verifyMailCode)
 customerRouter.post('/verify-mail',profileController.verifyMail)
+customerRouter.get('/payment',contentController.payment)
 
 export default customerRouter
