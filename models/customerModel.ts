@@ -17,7 +17,8 @@ const userSchema = new Schema<IUser>({
   photo: {type: String},
   status:{
     policies_accepted:{type: Boolean, default:false},
-    email_verified:{type:Boolean, default: false}
+    email_verified:{type:Boolean, default: false},
+    subscribed:{type:Boolean, default: false}
   }
 });
 

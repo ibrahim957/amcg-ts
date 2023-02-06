@@ -32,7 +32,8 @@ const userSchema = new mongoose_1.Schema({
     photo: { type: String },
     status: {
         policies_accepted: { type: Boolean, default: false },
-        email_verified: { type: Boolean, default: false }
+        email_verified: { type: Boolean, default: false },
+        subscribed: { type: Boolean, default: false }
     }
 });
 exports.default = mongoose_1.default.model('User', userSchema);

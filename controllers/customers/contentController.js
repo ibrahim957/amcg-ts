@@ -36,21 +36,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv = __importStar(require("dotenv"));
+const customerModel_1 = __importDefault(require("../../models/customerModel"));
 dotenv.config();
 const stripe_1 = __importDefault(require("stripe"));
 // @ts-ignore
 const stripe = new stripe_1.default('sk_test_51LysudBXNTMYmqBgC40ZaPMeY7zK0fvza3uB82eiiam26Z59tB7dv71R4uII9xhyDnJQPz4q3bATtAmbhN8mBq3T00olxlXc3w');
 const payment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const YOUR_DOMAIN = 'http://localhost:4000/membership';
+        const YOUR_DOMAIN = 'http://localhost:3000';
         const session = yield stripe.checkout.sessions.create({
             payment_method_types: [
                 'card'
             ],
             line_items: [
                 {
-                    // TODO: replace this with the `price` of the product you want to sell
-                    // price: '{{PRICE_ID}}',
                     price_data: {
                         currency: 'usd',
                         product_data: {
@@ -65,12 +64,87 @@ const payment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
             success_url: `${YOUR_DOMAIN}?success=true`,
             cancel_url: `${YOUR_DOMAIN}?canceled=true`,
         });
-        res.redirect(session.url.toString());
+        res.send(session.url);
+    }
+    catch (err) {
+        return next(err);
+    }
+});
+const research = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const email_address = req.user;
+        let customer = yield customerModel_1.default.findOne({ email_address: email_address });
+        if (!customer) {
+            return next('Customer not found');
+        }
+        const { keywords } = req.body;
+        if (!keywords) {
+            return next("Keywords are required");
+        }
+        return res.status(200).send({
+            status: 200,
+            error: false,
+            message: 'Research successful'
+        });
+    }
+    catch (err) {
+        return next(err);
+    }
+});
+const subscriptionPayment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const YOUR_DOMAIN = 'http://localhost:3000';
+        const session = yield stripe.checkout.sessions.create({
+            payment_method_types: [
+                'card'
+            ],
+            line_items: [
+                {
+                    price_data: {
+                        currency: 'usd',
+                        product_data: {
+                            name: 'AMCG Subscription'
+                        },
+                        unit_amount: 200
+                    },
+                    quantity: 1,
+                },
+            ],
+            mode: 'payment',
+            success_url: `${YOUR_DOMAIN}?success=true`,
+            cancel_url: `${YOUR_DOMAIN}?canceled=true`,
+        });
+        res.send(session.url);
+    }
+    catch (err) {
+        return next(err);
+    }
+});
+const subscribe = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const email_address = req.user;
+        let customer = yield customerModel_1.default.findOne({ email_address: email_address });
+        if (!customer) {
+            return next('Customer not found');
+        }
+        customer.status.subscribed = true;
+        yield customer.save().then(() => {
+            return res.status(200).send({
+                status: 200,
+                error: false,
+                message: 'User Subscribed',
+            });
+        }).catch((err) => {
+            return next(err);
+        });
     }
     catch (err) {
         return next(err);
     }
 });
 module.exports = {
-    payment
+    payment,
+    research,
+    subscriptionPayment,
+    subscribe
 };
