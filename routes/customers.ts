@@ -19,7 +19,7 @@ customerRouter.use(authToken)
 customerRouter.post('/policy',profileController.policy)
 customerRouter.post('/verify-mail-code',profileController.verifyMailCode)
 customerRouter.post('/verify-mail',profileController.verifyMail)
-customerRouter.get('/research',contentController.research)
+customerRouter.post('/research',contentController.research)
 customerRouter.post('/subscription',contentController.subscribe)
 
 export default customerRouter

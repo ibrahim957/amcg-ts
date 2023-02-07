@@ -39,6 +39,7 @@ const dotenv = __importStar(require("dotenv"));
 const customerModel_1 = __importDefault(require("../../models/customerModel"));
 dotenv.config();
 const stripe_1 = __importDefault(require("stripe"));
+const src_1 = require("../../src");
 // @ts-ignore
 const stripe = new stripe_1.default('sk_test_51LysudBXNTMYmqBgC40ZaPMeY7zK0fvza3uB82eiiam26Z59tB7dv71R4uII9xhyDnJQPz4q3bATtAmbhN8mBq3T00olxlXc3w');
 const payment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -81,10 +82,13 @@ const research = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         if (!keywords) {
             return next("Keywords are required");
         }
-        return res.status(200).send({
-            status: 200,
-            error: false,
-            message: 'Research successful'
+        yield (0, src_1.generateMemes)(keywords).then((response) => {
+            return res.status(200).send({
+                status: 200,
+                error: false,
+                message: 'Research successful',
+                response: response
+            });
         });
     }
     catch (err) {

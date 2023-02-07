@@ -1,8 +1,7 @@
-import express, { Express, Request, Response } from 'express';
 import * as dotenv from 'dotenv';
+dotenv.config();
 
 // get all imports
-import deepai from 'deepai';
 import * as openai from 'openai';
 
 // Config constants
@@ -13,74 +12,57 @@ import { addTextOnImage, downloadFile } from './utils';
 import { AxiosResponse } from 'axios';
 import sharp = require('sharp');
 
-dotenv.config();
+export async function generateMemes(prompt: string) {
 
-const app: Express = express();
-const port = process.env.PORT;
-
-/**
- * Image URL for testing image processing flows, as not to run up API usage cost
- */
-const TEST_IMAGE_URL = 'https://api.deepai.org/job-view-file/6a9cfedc-d418-44e7-97e1-e265ead8b913/outputs/output.jpg';
-
-/**
- *
- * @param prompt The test prompt DeepAI will generate image from
- * @returns DeepAI's ModelOutputs type with id and output_url string attributes
- */
-async function generateImages(prompt: string): Promise<any> {
-  // DeepAI config
-  deepai.setApiKey(process.env.DEEPAI_API_KEY as string);
-  const images = await deepai.callStandardApi('text2img', {
-    text: prompt,
-  });
-  return images;
-}
-
-async function generateMemes(prompt: string) {
-  // OpenAI config
+  const size = "512x512";
+  // Env Config
   openAiConfig = new openai.Configuration({
     apiKey: process.env.OPENAI_API_KEY,
   });
   openaiApi = new openai.OpenAIApi(openAiConfig);
 
-  // DeepAI config
-  deepai.setApiKey(process.env.DEEPAI_API_KEY ?? '');
-
   // arrays to use
   const imagesList: AxiosResponse[] = [];
-  // const imagesBuffers: Buffer[] = [];
-  // const imagesCaptionedBuffers: Buffer[] = [];
 
-  // In dev mode we don't generate a new DeepAI image, we reuse one.
-  if (process.env.NODE_ENV === 'development') {
-    imagesList.push(await downloadFile(TEST_IMAGE_URL));
+  // Generate Images
+  const response = await openaiApi.createImage({
+    prompt,
+    n: 2,
+    size,
+  });
+
+  // TODO remove later
+  console.log("openaiApi.createImage response: ", response.data.data);
+
+  // download all images generated
+  for (const imgObj of response.data.data) {
+    imagesList.push(await downloadFile(imgObj.url ?? ""));
+
   }
 
-  const imagesBuffers: Buffer[] = imagesList.map(deepAiResp => {
-    return Buffer.from(deepAiResp.data, 'binary');
+  // images to buffer for easier manipulation
+  const imagesBuffers: Buffer[] = imagesList.map(img => {
+    return Buffer.from(img.data, 'binary');
   });
+
+  // caption images
   const imagesCaptionedBuffers: Buffer[] = await Promise.all(
     imagesBuffers.map(async imgbuff => {
       return await addTextOnImage(imgbuff, prompt);
     })
   );
 
-  // In dev mode we store all images to local storage
-  if (process.env.NODE_ENV === 'development') {
-    const counter = 0;
-    Promise.all(
-      imagesCaptionedBuffers.map(async imgbuff => {
-        await sharp(imgbuff).toFormat('jpeg').toFile(`${counter}.jpeg`);
-      })
-    );
-  }
+  // // store all images to local storage
+  // let counter = 0;
+  // await Promise.all(
+  //   imagesCaptionedBuffers.map(async imgbuff => {
+  //     await sharp(imgbuff).toFormat('jpeg').toFile(`${counter}.jpeg`);
+  //   })
+  // );
+  return imagesCaptionedBuffers
 }
 
-app.get('/', (req: Request, res: Response) => {
-  res.send(generateMemes('Imran khan is happy'))
-});
-
-app.listen(port, () => {
-  console.log(`[server]: Server is running at https://localhost:${port}`);
-});
+// generateMemes('imran khan is happy').then((response) => {
+//   console.log(response)
+//   console.log('Exited.');
+// });

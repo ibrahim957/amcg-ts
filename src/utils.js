@@ -47,7 +47,7 @@ function addTextOnImage(image, caption) {
             const svgImage = `
       <svg width="${sharpImageMetadata.width}" height="${sharpImageMetadata.height}">
         <style>
-        .title { fill: #001; font-size: 70px; font-weight: bold;}
+        .title { fill: #001; font-size: 30px; font-weight: bold;}
         </style>
         <text x="50%" y="50%" text-anchor="middle" class="title">${caption}</text>
       </svg>

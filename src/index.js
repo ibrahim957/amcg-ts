@@ -31,78 +31,59 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
+exports.generateMemes = void 0;
 const dotenv = __importStar(require("dotenv"));
+dotenv.config();
 // get all imports
-const deepai_1 = __importDefault(require("deepai"));
 const openai = __importStar(require("openai"));
 // Config constants
 let openaiApi;
 let openAiConfig;
 const utils_1 = require("./utils");
-const sharp = require("sharp");
-dotenv.config();
-const app = (0, express_1.default)();
-const port = process.env.PORT;
-/**
- * Image URL for testing image processing flows, as not to run up API usage cost
- */
-const TEST_IMAGE_URL = 'https://api.deepai.org/job-view-file/6a9cfedc-d418-44e7-97e1-e265ead8b913/outputs/output.jpg';
-/**
- *
- * @param prompt The test prompt DeepAI will generate image from
- * @returns DeepAI's ModelOutputs type with id and output_url string attributes
- */
-function generateImages(prompt) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // DeepAI config
-        deepai_1.default.setApiKey(process.env.DEEPAI_API_KEY);
-        const images = yield deepai_1.default.callStandardApi('text2img', {
-            text: prompt,
-        });
-        return images;
-    });
-}
 function generateMemes(prompt) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        // OpenAI config
+        const size = "512x512";
+        // Env Config
         openAiConfig = new openai.Configuration({
             apiKey: process.env.OPENAI_API_KEY,
         });
         openaiApi = new openai.OpenAIApi(openAiConfig);
-        // DeepAI config
-        deepai_1.default.setApiKey((_a = process.env.DEEPAI_API_KEY) !== null && _a !== void 0 ? _a : '');
         // arrays to use
         const imagesList = [];
-        // const imagesBuffers: Buffer[] = [];
-        // const imagesCaptionedBuffers: Buffer[] = [];
-        // In dev mode we don't generate a new DeepAI image, we reuse one.
-        if (process.env.NODE_ENV === 'development') {
-            imagesList.push(yield (0, utils_1.downloadFile)(TEST_IMAGE_URL));
-        }
-        const imagesBuffers = imagesList.map(deepAiResp => {
-            return Buffer.from(deepAiResp.data, 'binary');
+        // Generate Images
+        const response = yield openaiApi.createImage({
+            prompt,
+            n: 2,
+            size,
         });
+        // TODO remove later
+        console.log("openaiApi.createImage response: ", response.data.data);
+        // download all images generated
+        for (const imgObj of response.data.data) {
+            imagesList.push(yield (0, utils_1.downloadFile)((_a = imgObj.url) !== null && _a !== void 0 ? _a : ""));
+        }
+        // images to buffer for easier manipulation
+        const imagesBuffers = imagesList.map(img => {
+            return Buffer.from(img.data, 'binary');
+        });
+        // caption images
         const imagesCaptionedBuffers = yield Promise.all(imagesBuffers.map((imgbuff) => __awaiter(this, void 0, void 0, function* () {
             return yield (0, utils_1.addTextOnImage)(imgbuff, prompt);
         })));
-        // In dev mode we store all images to local storage
-        if (process.env.NODE_ENV === 'development') {
-            const counter = 0;
-            Promise.all(imagesCaptionedBuffers.map((imgbuff) => __awaiter(this, void 0, void 0, function* () {
-                yield sharp(imgbuff).toFormat('jpeg').toFile(`${counter}.jpeg`);
-            })));
-        }
+        // // store all images to local storage
+        // let counter = 0;
+        // await Promise.all(
+        //   imagesCaptionedBuffers.map(async imgbuff => {
+        //     await sharp(imgbuff).toFormat('jpeg').toFile(`${counter}.jpeg`);
+        //   })
+        // );
+        return imagesCaptionedBuffers;
     });
 }
-app.get('/', (req, res) => {
-    res.send(generateMemes('Imran khan is happy'));
-});
-app.listen(port, () => {
-    console.log(`[server]: Server is running at https://localhost:${port}`);
-});
+exports.generateMemes = generateMemes;
+// generateMemes('imran khan is happy').then((response) => {
+//   console.log(response)
+//   console.log('Exited.');
+// });

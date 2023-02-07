@@ -8,6 +8,7 @@ dotenv.config();
 
 import Stripe from "stripe";
 import {CustomRequest} from "../../middleware/authToken";
+import {generateMemes} from "../../src";
 
 // @ts-ignore
 const stripe = new Stripe('sk_test_51LysudBXNTMYmqBgC40ZaPMeY7zK0fvza3uB82eiiam26Z59tB7dv71R4uII9xhyDnJQPz4q3bATtAmbhN8mBq3T00olxlXc3w' );
@@ -62,10 +63,13 @@ const research = async(req :CustomRequest, res:Response, next:NextFunction) => {
       return next("Keywords are required")
     }
 
-    return res.status(200).send({
-      status: 200,
-      error: false,
-      message: 'Research successful'
+    await generateMemes(keywords).then((response)=>{
+      return res.status(200).send({
+        status: 200,
+        error: false,
+        message: 'Research successful',
+        response: response
+      })
     })
 
   } catch (err) {

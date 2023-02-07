@@ -27,7 +27,6 @@ app.use(morgan('combined'))
 app.use(helmet())
 
 app.use('/customer', customerRouter)
-
 app.use(errorHandler)
 
 
