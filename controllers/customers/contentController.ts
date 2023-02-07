@@ -2,6 +2,7 @@ import {NextFunction, Response, Request} from "express";
 import * as dotenv from 'dotenv';
 import customers from "../../models/customerModel";
 import * as functions from "../../helpers/functions";
+import bufferImage from 'buffer-image'
 
 dotenv.config();
 
@@ -63,12 +64,20 @@ const research = async(req :CustomRequest, res:Response, next:NextFunction) => {
       return next("Keywords are required")
     }
 
-    await generateMemes(keywords).then((response)=>{
+    let array: string[] = []
+
+    await generateMemes(keywords).then(async(response)=>{
+      for(let val of response){
+        const b64 = val.toString('base64');
+        const mimeType = 'image/png'; // e.g., image/png
+
+        array.push(`<img src="data:${mimeType};base64,${b64}"  alt="yo"/>`);
+      }
       return res.status(200).send({
         status: 200,
         error: false,
         message: 'Research successful',
-        response: response
+        response: array
       })
     })
 

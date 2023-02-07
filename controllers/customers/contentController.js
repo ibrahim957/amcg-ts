@@ -82,14 +82,20 @@ const research = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         if (!keywords) {
             return next("Keywords are required");
         }
-        yield (0, src_1.generateMemes)(keywords).then((response) => {
+        let array = [];
+        yield (0, src_1.generateMemes)(keywords).then((response) => __awaiter(void 0, void 0, void 0, function* () {
+            for (let val of response) {
+                const b64 = val.toString('base64');
+                const mimeType = 'image/png'; // e.g., image/png
+                array.push(`<img src="data:${mimeType};base64,${b64}"  alt="yo"/>`);
+            }
             return res.status(200).send({
                 status: 200,
                 error: false,
                 message: 'Research successful',
-                response: response
+                response: array
             });
-        });
+        }));
     }
     catch (err) {
         return next(err);
