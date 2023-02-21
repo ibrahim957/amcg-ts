@@ -67,12 +67,10 @@ const research = async(req :CustomRequest, res:Response, next:NextFunction) => {
     let array: string[] = []
 
     await generateMemes(keywords).then(async(response)=>{
-      for(let val of response){
-        const b64 = val.toString('base64');
-        const mimeType = 'image/png'; // e.g., image/png
-
-        array.push(`<img src="data:${mimeType};base64,${b64}"  alt="yo"/>`);
-      }
+      response.forEach(function(arrayItem){
+        const b64 = arrayItem.toString('base64');
+        array.push(b64)
+      })
       return res.status(200).send({
         status: 200,
         error: false,
