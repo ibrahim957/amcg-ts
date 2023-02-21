@@ -12,6 +12,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.addTextOnImage = exports.downloadFile = void 0;
 const axios = require('axios');
 const sharp = require('sharp');
+function splitString(s) {
+    var middle = Math.floor(s.length / 2);
+    var before = s.lastIndexOf(' ', middle);
+    var after = s.indexOf(' ', middle + 1);
+    if (before == -1 || (after != -1 && middle - before >= after - middle)) {
+        middle = after;
+    }
+    else {
+        middle = before;
+    }
+    var s1 = s.substring(0, middle);
+    var s2 = s.substring(middle + 1);
+    return [s1, s2];
+}
 /**
  * @async
  * @param url The URL of the jpg file to doanload as a steam
@@ -42,14 +56,19 @@ function addTextOnImage(image, caption) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const sharpImage = yield sharp(image);
-            const sharpImageMetadata = sharpImage.metadata();
+            const sharpImageMetadata = yield sharpImage.metadata();
+            console.log("Image metadata: ", sharpImageMetadata);
+            // break caption into two halves
+            const parts = splitString(caption);
             // Define the SVG image to overlay our on image
             const svgImage = `
-      <svg width="${sharpImageMetadata.width}" height="${sharpImageMetadata.height}">
+      <svg width="${sharpImageMetadata.width}" height="${sharpImageMetadata.height}" style="position: relative">
         <style>
-        .title { fill: #001; font-size: 30px; font-weight: bold;}
+        .title { fill: #001;text-shadow:1px 1px darkred; font-size: 150%; font-weight: bold;}
         </style>
-        <text x="50%" y="50%" text-anchor="middle" class="title">${caption}</text>
+        
+        <text  y="10%" text-anchor="left" style="position: absolute;left:10px;right: 10px " class="title">${parts[0]}</text>
+        <text  y="80%" text-anchor="left" style="position: absolute;left:10px;right: 10px" class="title">${parts[1]}</text>
       </svg>
       `;
             const svgBuffer = Buffer.from(svgImage);

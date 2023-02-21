@@ -44,6 +44,7 @@ const utils_1 = require("./utils");
 function generateMemes(prompt) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
+        const generations = 2;
         const size = "512x512";
         // Env Config
         openAiConfig = new openai.Configuration({
@@ -52,10 +53,19 @@ function generateMemes(prompt) {
         openaiApi = new openai.OpenAIApi(openAiConfig);
         // arrays to use
         const imagesList = [];
+        const caption = yield openaiApi.createCompletion({
+            model: "text-davinci-003",
+            prompt: "a satirical comment on the topic: " + prompt,
+            max_tokens: 40,
+            temperature: 0,
+            n: generations
+        });
+        console.log(caption.data.choices);
+        const temp_prompt = "realistic image of" + prompt;
         // Generate Images
         const response = yield openaiApi.createImage({
-            prompt,
-            n: 2,
+            prompt: temp_prompt,
+            n: generations,
             size,
         });
         // TODO remove later
@@ -68,22 +78,13 @@ function generateMemes(prompt) {
         const imagesBuffers = imagesList.map(img => {
             return Buffer.from(img.data, 'binary');
         });
+        let a = 0;
         // caption images
         const imagesCaptionedBuffers = yield Promise.all(imagesBuffers.map((imgbuff) => __awaiter(this, void 0, void 0, function* () {
-            return yield (0, utils_1.addTextOnImage)(imgbuff, prompt);
+            var _b;
+            return yield (0, utils_1.addTextOnImage)(imgbuff, (_b = caption.data.choices[a++].text) !== null && _b !== void 0 ? _b : prompt);
         })));
-        // // store all images to local storage
-        // let counter = 0;
-        // await Promise.all(
-        //   imagesCaptionedBuffers.map(async imgbuff => {
-        //     await sharp(imgbuff).toFormat('jpeg').toFile(`${counter}.jpeg`);
-        //   })
-        // );
         return imagesCaptionedBuffers;
     });
 }
 exports.generateMemes = generateMemes;
-// generateMemes('imran khan is happy').then((response) => {
-//   console.log(response)
-//   console.log('Exited.');
-// });

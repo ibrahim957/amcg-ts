@@ -10,10 +10,10 @@ let openAiConfig: openai.Configuration;
 
 import { addTextOnImage, downloadFile } from './utils';
 import { AxiosResponse } from 'axios';
-import sharp = require('sharp');
 
 export async function generateMemes(prompt: string) {
 
+  const generations = 2;
   const size = "512x512";
   // Env Config
   openAiConfig = new openai.Configuration({
@@ -24,10 +24,20 @@ export async function generateMemes(prompt: string) {
   // arrays to use
   const imagesList: AxiosResponse[] = [];
 
+  const caption = await openaiApi.createCompletion({
+    model: "text-davinci-003",
+    prompt: "a satirical comment on the topic: " + prompt,
+    max_tokens: 40,
+    temperature: 0,
+    n: generations
+  });
+
+  console.log(caption.data.choices);
+  const temp_prompt: string  = "realistic image of" + prompt;
   // Generate Images
   const response = await openaiApi.createImage({
-    prompt,
-    n: 2,
+    prompt: temp_prompt,
+    n: generations,
     size,
   });
 
@@ -45,24 +55,13 @@ export async function generateMemes(prompt: string) {
     return Buffer.from(img.data, 'binary');
   });
 
+  let a = 0;
   // caption images
   const imagesCaptionedBuffers: Buffer[] = await Promise.all(
     imagesBuffers.map(async imgbuff => {
-      return await addTextOnImage(imgbuff, prompt);
+      return await addTextOnImage(imgbuff, caption.data.choices[a++].text ?? prompt);
     })
   );
 
-  // // store all images to local storage
-  // let counter = 0;
-  // await Promise.all(
-  //   imagesCaptionedBuffers.map(async imgbuff => {
-  //     await sharp(imgbuff).toFormat('jpeg').toFile(`${counter}.jpeg`);
-  //   })
-  // );
   return imagesCaptionedBuffers
 }
-
-// generateMemes('imran khan is happy').then((response) => {
-//   console.log(response)
-//   console.log('Exited.');
-// });
