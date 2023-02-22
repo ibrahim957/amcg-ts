@@ -56,13 +56,13 @@ export async function addTextOnImage(
 
     // Define the SVG image to overlay our on image
     const svgImage = `
-      <svg width="${sharpImageMetadata.width}" height="${sharpImageMetadata.height}" style="position: relative">
+      <svg width="${sharpImageMetadata.width}" height="${sharpImageMetadata.height}">
         <style>
-        .title { fill: #001;text-shadow:1px 1px darkred; font-size: 150%; font-weight: bold;}
+        .title { fill: #001;text-shadow:3px 3px red; font-size: 120%; font-weight: bold;}
         </style>
         
-        <text  y="10%" text-anchor="left" style="position: absolute;left:10px;right: 10px " class="title">${parts[0]}</text>
-        <text  y="80%" text-anchor="left" style="position: absolute;left:10px;right: 10px" class="title">${parts[1]}</text>
+        <text x="2%" y="5%" text-anchor="right" class="title">${parts[0]}</text>
+        <text x="2%" y="95%" text-anchor="right" class="title">${parts[1]}</text>
       </svg>
       `;
     const svgBuffer = Buffer.from(svgImage);
