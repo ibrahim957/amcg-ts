@@ -18,11 +18,11 @@ const register = async(req: Request, res: Response, next: NextFunction) => {
 
     if(!email_address) return next('Email address is required')
 
-    // if(!await func.validateEmail(email_address)) return next('Email Address is not valid')
+    if(!await functions.validateEmail(email_address)) return next('Email Address is not valid')
 
     if(!password) return next('Password is required')
 
-    // if(!await func.validatePassword(password)) return next('Password is not valid')
+    if(!await functions.validatePassword(password)) return next('Password is not valid')
 
     if(!name) return next('UserName is required')
 
@@ -72,11 +72,11 @@ const login = async(req: Request, res: Response, next: NextFunction) => {
 
     if(!password) return next('Password is required')
 
-    // if(!await func.validatePassword(password)) return next('Password is not valid')
+    if(!await functions.validatePassword(password)) return next('Password is not valid')
 
     if(!email_address) return next('Email address is required')
 
-    // if(!await func.validateEmail(email_address)) return next('Email Address is not valid')
+    if(!await functions.validateEmail(email_address)) return next('Email Address is not valid')
 
     const customer:any = await customers.findOne({ email_address:email_address })
 

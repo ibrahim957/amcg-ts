@@ -1,8 +1,7 @@
 import {NextFunction, Response, Request} from "express";
 import * as dotenv from 'dotenv';
 import customers from "../../models/customerModel";
-import * as functions from "../../helpers/functions";
-import bufferImage from 'buffer-image'
+import historys from "../../models/historyModel";
 
 dotenv.config();
 
@@ -12,40 +11,7 @@ import {CustomRequest} from "../../middleware/authToken";
 import {generateMemes} from "../../src";
 
 // @ts-ignore
-const stripe = new Stripe('sk_test_51LysudBXNTMYmqBgC40ZaPMeY7zK0fvza3uB82eiiam26Z59tB7dv71R4uII9xhyDnJQPz4q3bATtAmbhN8mBq3T00olxlXc3w' );
-
-const payment = async (req :Request, res:Response, next:NextFunction) => {
-
-  try {
-
-    const YOUR_DOMAIN = 'http://localhost:3000'
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: [
-        'card'
-      ],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'AMCG Research'
-            },
-            unit_amount: 100
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: `${YOUR_DOMAIN}?success=true`,
-      cancel_url: `${YOUR_DOMAIN}?canceled=true`,
-    });
-    res.send(session.url)
-
-  } catch (err) {
-    return next(err)
-  }
-}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const research = async(req :CustomRequest, res:Response, next:NextFunction) => {
   try {
@@ -56,6 +22,10 @@ const research = async(req :CustomRequest, res:Response, next:NextFunction) => {
 
     if (!customer) {
       return next('Customer not found')
+    }
+
+    if(!customer.status.subscribed){
+      return next('Customer not Subscribed')
     }
 
     const {keywords} = req.body
@@ -71,6 +41,9 @@ const research = async(req :CustomRequest, res:Response, next:NextFunction) => {
         const b64 = arrayItem.toString('base64');
         array.push(b64)
       })
+
+      await historys.create({keywords:keywords,customer_id:customer._id,memes:array})
+
       return res.status(200).send({
         status: 200,
         error: false,
@@ -84,11 +57,37 @@ const research = async(req :CustomRequest, res:Response, next:NextFunction) => {
   }
 }
 
+const history = async(req :CustomRequest, res:Response, next:NextFunction) => {
+  try {
+
+    const email_address = req.user
+
+    let customer: any = await customers.findOne({email_address: email_address})
+
+    if (!customer) {
+      return next('Customer not found')
+    }
+
+    await historys.find({customer_id:customer._id}).then((response)=>{
+    
+      return res.status(200).send({
+        status: 200,
+        error: false,
+        message: 'History retreived successfully',
+        response: response
+      })
+    })
+
+  } catch (err) {
+    return next(err)
+  }
+} 
+
 const subscriptionPayment = async (req :Request, res:Response, next:NextFunction) => {
 
   try {
 
-    const YOUR_DOMAIN = 'http://localhost:3000'
+    const YOUR_DOMAIN = process.env.FRONT_END_LINK
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: [
@@ -101,7 +100,7 @@ const subscriptionPayment = async (req :Request, res:Response, next:NextFunction
             product_data: {
               name: 'AMCG Subscription'
             },
-            unit_amount: 200
+            unit_amount: 100
           },
           quantity: 1,
         },
@@ -149,8 +148,8 @@ const subscribe = async(req :CustomRequest, res:Response, next:NextFunction) => 
 }
 
 module.exports = {
-  payment,
   research,
+  history,
   subscriptionPayment,
   subscribe
 }

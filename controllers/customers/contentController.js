@@ -37,46 +37,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv = __importStar(require("dotenv"));
 const customerModel_1 = __importDefault(require("../../models/customerModel"));
+const historyModel_1 = __importDefault(require("../../models/historyModel"));
 dotenv.config();
 const stripe_1 = __importDefault(require("stripe"));
 const src_1 = require("../../src");
 // @ts-ignore
-const stripe = new stripe_1.default('sk_test_51LysudBXNTMYmqBgC40ZaPMeY7zK0fvza3uB82eiiam26Z59tB7dv71R4uII9xhyDnJQPz4q3bATtAmbhN8mBq3T00olxlXc3w');
-const payment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const YOUR_DOMAIN = 'http://localhost:3000';
-        const session = yield stripe.checkout.sessions.create({
-            payment_method_types: [
-                'card'
-            ],
-            line_items: [
-                {
-                    price_data: {
-                        currency: 'usd',
-                        product_data: {
-                            name: 'AMCG Research'
-                        },
-                        unit_amount: 100
-                    },
-                    quantity: 1,
-                },
-            ],
-            mode: 'payment',
-            success_url: `${YOUR_DOMAIN}?success=true`,
-            cancel_url: `${YOUR_DOMAIN}?canceled=true`,
-        });
-        res.send(session.url);
-    }
-    catch (err) {
-        return next(err);
-    }
-});
+const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY);
 const research = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const email_address = req.user;
         let customer = yield customerModel_1.default.findOne({ email_address: email_address });
         if (!customer) {
             return next('Customer not found');
+        }
+        if (!customer.status.subscribed) {
+            return next('Customer not Subscribed');
         }
         const { keywords } = req.body;
         if (!keywords) {
@@ -88,6 +63,7 @@ const research = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
                 const b64 = arrayItem.toString('base64');
                 array.push(b64);
             });
+            yield historyModel_1.default.create({ keywords: keywords, customer_id: customer._id, memes: array });
             return res.status(200).send({
                 status: 200,
                 error: false,
@@ -100,9 +76,29 @@ const research = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         return next(err);
     }
 });
+const history = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const email_address = req.user;
+        let customer = yield customerModel_1.default.findOne({ email_address: email_address });
+        if (!customer) {
+            return next('Customer not found');
+        }
+        yield historyModel_1.default.find({ customer_id: customer._id }).then((response) => {
+            return res.status(200).send({
+                status: 200,
+                error: false,
+                message: 'History retreived successfully',
+                response: response
+            });
+        });
+    }
+    catch (err) {
+        return next(err);
+    }
+});
 const subscriptionPayment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const YOUR_DOMAIN = 'http://localhost:3000';
+        const YOUR_DOMAIN = process.env.FRONT_END_LINK;
         const session = yield stripe.checkout.sessions.create({
             payment_method_types: [
                 'card'
@@ -114,7 +110,7 @@ const subscriptionPayment = (req, res, next) => __awaiter(void 0, void 0, void 0
                         product_data: {
                             name: 'AMCG Subscription'
                         },
-                        unit_amount: 200
+                        unit_amount: 100
                     },
                     quantity: 1,
                 },
@@ -152,8 +148,8 @@ const subscribe = (req, res, next) => __awaiter(void 0, void 0, void 0, function
     }
 });
 module.exports = {
-    payment,
     research,
+    history,
     subscriptionPayment,
     subscribe
 };

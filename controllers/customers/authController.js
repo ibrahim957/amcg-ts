@@ -47,10 +47,12 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         const { email_address, password, name } = req.body;
         if (!email_address)
             return next('Email address is required');
-        // if(!await func.validateEmail(email_address)) return next('Email Address is not valid')
+        if (!(yield functions.validateEmail(email_address)))
+            return next('Email Address is not valid');
         if (!password)
             return next('Password is required');
-        // if(!await func.validatePassword(password)) return next('Password is not valid')
+        if (!(yield functions.validatePassword(password)))
+            return next('Password is not valid');
         if (!name)
             return next('UserName is required');
         const customer = yield customerModel_1.default.findOne({ email_address: email_address });
@@ -87,10 +89,12 @@ const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* ()
         const { email_address, password } = req.body;
         if (!password)
             return next('Password is required');
-        // if(!await func.validatePassword(password)) return next('Password is not valid')
+        if (!(yield functions.validatePassword(password)))
+            return next('Password is not valid');
         if (!email_address)
             return next('Email address is required');
-        // if(!await func.validateEmail(email_address)) return next('Email Address is not valid')
+        if (!(yield functions.validateEmail(email_address)))
+            return next('Email Address is not valid');
         const customer = yield customerModel_1.default.findOne({ email_address: email_address });
         if (customer) {
             if (yield bcryptjs_1.default.compare(password, customer.password)) {

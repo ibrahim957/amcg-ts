@@ -12,47 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendEmail = void 0;
+exports.validatePassword = exports.validateEmail = exports.sendEmail = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const nodemailer_express_handlebars_1 = __importDefault(require("nodemailer-express-handlebars"));
 const nodemailer_smtp_transport_1 = __importDefault(require("nodemailer-smtp-transport"));
 const path_1 = __importDefault(require("path"));
-// exports.uploadImage = async function uploadImage(base64Image:String) {
-//
-//   aws.config.setPromisesDependency(bluebird)
-//   aws.config.update({
-//     accessKeyId: process.env.awsAccessKeyId,
-//     secretAccessKey: process.env.awsSecretAccessKey,
-//     region: process.env.awsDefaultRegion
-//   })
-//
-//   const s3 = new aws.S3()
-//
-//   let base64Data: Buffer
-//
-//   base64Data = Buffer.from(base64Image.replace(/^data:image\/\w+;base64,/, ''), 'base64')
-//
-//   const type = base64Image.split(';')[0].split('/')[1]
-//
-//   const key = process.env.s3Dir + '/' + crypto.randomBytes(20).toString('hex') + '.' + type
-//
-//   const params = {
-//     Bucket: process.env.s3Bucket,
-//     Key: key,
-//     Body: base64Data,
-//     ACL: 'public-read',
-//     ContentEncoding: 'base64',
-//     ContentType: 'image/' + type
-//   }
-//
-//   try {
-//     const { Location } = await s3.upload(new Putparams).promise()
-//     return Location
-//
-//   } catch (error:any) {
-//     throw new Error(error)
-//   }
-// }
 function sendEmail(to, subject, emailBody) {
     return __awaiter(this, void 0, void 0, function* () {
         let transporter;
@@ -108,3 +72,17 @@ function sendEmail(to, subject, emailBody) {
     });
 }
 exports.sendEmail = sendEmail;
+function validateEmail(emailAddress) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let regexEmail = /^\w+(-?\w+)*@\w+(-?\w+)*(\.\w{2,3})+$/;
+        return emailAddress.match(regexEmail);
+    });
+}
+exports.validateEmail = validateEmail;
+function validatePassword(password) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let regexPassword = new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\\$%\\^&\\*])(?=.{8,})');
+        return regexPassword.test(password);
+    });
+}
+exports.validatePassword = validatePassword;
